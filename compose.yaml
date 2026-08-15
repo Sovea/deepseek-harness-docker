@@ -1,0 +1,38 @@
+name: dsh-docker
+
+services:
+  dsh:
+    image: ${DSH_IMAGE:-dsh-docker:local}
+    build:
+      context: .
+      args:
+        NODE_IMAGE: ${NODE_IMAGE:-node:24-bookworm-slim}
+        DSH_VERSION: ${DSH_VERSION:-0.1.0-rc.6}
+        PNPM_VERSION: ${PNPM_VERSION:-11.7.0}
+        DSH_UID: ${DSH_UID:-1000}
+        DSH_GID: ${DSH_GID:-1000}
+        IMAGE_VERSION: ${IMAGE_VERSION:-0.1.0-rc.6-r1}
+    restart: unless-stopped
+    environment:
+      DSH_TRUSTED_HOSTS: ${DSH_TRUSTED_HOSTS:-}
+      DSH_PERMISSION_MODE: ${DSH_PERMISSION_MODE:-workspace-write}
+      DSH_TOOLS_MODE: ${DSH_TOOLS_MODE:-native}
+      DSH_TELEMETRY_DISABLED: ${DSH_TELEMETRY_DISABLED:-1}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-}
+      DEEPSEEK_SEARCH_BASE_URL: ${DEEPSEEK_SEARCH_BASE_URL:-}
+    ports:
+      - "127.0.0.1:${DSH_HOST_PORT:-3080}:13080"
+    volumes:
+      - dsh_home:/home/node/.dsh
+      - type: bind
+        source: ${DSH_WORKSPACES:-./workspaces}
+        target: /home/node/workspaces
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    stop_grace_period: 10s
+
+volumes:
+  dsh_home:

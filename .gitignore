@@ -1,0 +1,8 @@
+.env
+.env.*
+!.env.example
+.DS_Store
+compose.override.yaml
+
+workspaces/*
+!workspaces/.gitkeep

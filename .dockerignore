@@ -1,0 +1,11 @@
+.git
+.github
+.env
+.env.*
+!.env.example
+README*
+SECURITY.md
+LICENSE
+compose*.yaml
+scripts
+workspaces
