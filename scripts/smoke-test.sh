@@ -61,13 +61,16 @@ wait_for_web() {
   return 1
 }
 
-call_directory_api() {
-  local output=$1
-  local authority=${2:-}
-  local origin=${3:-}
+call_api() {
+  local method=$1
+  local output=$2
+  local authority=${3:-}
+  local origin=${4:-}
   local -a headers=()
   local payload
-  payload='{"type":"client-request","rpcId":"smoke-list-directory","method":"host.listDirectory","payload":{}}'
+  payload=$(printf \
+    '{"type":"client-request","rpcId":"smoke-api","method":"%s","payload":{}}' \
+    "$method")
 
   if [[ -n "$authority" ]]; then
     headers+=(--header "Host: $authority")
@@ -84,7 +87,7 @@ call_directory_api() {
     --data "$payload" \
     --output "$output" \
     --write-out '%{http_code}' \
-    "http://${endpoint}/api/host.listDirectory"
+    "http://${endpoint}/api/${method}"
 }
 
 log "building $image"
@@ -118,6 +121,18 @@ if docker run --rm \
   log 'non-authority DSH_TRUSTED_HOSTS entry was unexpectedly accepted'
   exit 1
 fi
+if docker run --rm \
+  --env 'DSH_ALLOW_REMOTE_ACCESS=yes' \
+  "$image" web >/dev/null 2>&1; then
+  log 'invalid DSH_ALLOW_REMOTE_ACCESS was unexpectedly accepted'
+  exit 1
+fi
+if docker run --rm \
+  --env 'DSH_ALLOW_REMOTE_ACCESS=1' \
+  "$image" web >/dev/null 2>&1; then
+  log 'remote access without trusted hosts was unexpectedly accepted'
+  exit 1
+fi
 
 docker volume create "$volume" >/dev/null
 if (( $(id -u) == 0 )); then
@@ -146,34 +161,73 @@ docker exec "$container" sh -c '
 '
 [[ "$(docker exec "$container" id -u)" != 0 ]]
 
-loopback_status=$(call_directory_api "$workspace_dir/loopback.json")
+loopback_status=$(call_api host.listDirectory "$workspace_dir/loopback.json")
 [[ "$loopback_status" == 200 ]]
 grep -q '"ok":true' "$workspace_dir/loopback.json"
 
-trusted_status=$(call_directory_api \
+trusted_status=$(call_api \
+  host.listDirectory \
   "$workspace_dir/trusted.json" \
   smoke.example \
   http://smoke.example)
 [[ "$trusted_status" == 200 ]]
 grep -q '"ok":true' "$workspace_dir/trusted.json"
 
-second_trusted_status=$(call_directory_api \
+second_trusted_status=$(call_api \
+  host.listDirectory \
   "$workspace_dir/second-trusted.json" \
   smoke-alt.example:8443 \
   https://smoke-alt.example:8443)
 [[ "$second_trusted_status" == 200 ]]
 grep -q '"ok":true' "$workspace_dir/second-trusted.json"
 
-untrusted_status=$(call_directory_api \
+untrusted_status=$(call_api \
+  host.listDirectory \
   "$workspace_dir/untrusted.txt" \
   untrusted.example \
   https://untrusted.example)
 [[ "$untrusted_status" == 403 ]]
 
-mismatched_origin_status=$(call_directory_api \
+mismatched_origin_status=$(call_api \
+  host.listDirectory \
   "$workspace_dir/mismatched-origin.txt" \
   smoke.example \
   https://untrusted.example)
 [[ "$mismatched_origin_status" == 403 ]]
+
+default_privileged_status=$(call_api \
+  settings.describe \
+  "$workspace_dir/default-privileged.txt" \
+  smoke.example \
+  http://smoke.example)
+[[ "$default_privileged_status" == 403 ]]
+
+log 'restarting with complete remote access enabled for trusted hosts'
+docker rm --force "$container" >/dev/null
+docker run --detach \
+  --name "$container" \
+  --env 'DSH_TRUSTED_HOSTS=smoke.example' \
+  --env 'DSH_ALLOW_REMOTE_ACCESS=1' \
+  --publish 127.0.0.1::13080 \
+  --volume "$volume:/home/node/.dsh" \
+  --volume "$workspace_dir:/home/node/workspaces" \
+  "$image" >/dev/null
+
+wait_for_web
+
+remote_privileged_status=$(call_api \
+  settings.describe \
+  "$workspace_dir/remote-privileged.json" \
+  smoke.example \
+  http://smoke.example)
+[[ "$remote_privileged_status" == 200 ]]
+grep -q '"ok":true' "$workspace_dir/remote-privileged.json"
+
+remote_untrusted_status=$(call_api \
+  settings.describe \
+  "$workspace_dir/remote-untrusted.txt" \
+  untrusted.example \
+  https://untrusted.example)
+[[ "$remote_untrusted_status" == 403 ]]
 
 log "Web UI is healthy at http://${endpoint}/"

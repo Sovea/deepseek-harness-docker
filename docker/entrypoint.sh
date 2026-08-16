@@ -41,6 +41,20 @@ append_trusted_hosts() {
   dsh_args+=(--trusted-host "${entries[@]}")
 }
 
+validate_remote_access() {
+  local value=${DSH_ALLOW_REMOTE_ACCESS:-0}
+
+  case "$value" in
+    0) return 0 ;;
+    1)
+      [[ -n "${DSH_TRUSTED_HOSTS:-}" ]] ||
+        fail 'DSH_ALLOW_REMOTE_ACCESS=1 requires DSH_TRUSTED_HOSTS'
+      log 'warning: remote access is enabled for all APIs on trusted hosts; require authenticated HTTPS access'
+      ;;
+    *) fail 'DSH_ALLOW_REMOTE_ACCESS must be 0 or 1' ;;
+  esac
+}
+
 mkdir -p \
   "${DSH_HOME:-/home/node/.dsh}" \
   "${NPM_CONFIG_CACHE:-/home/node/.dsh/cache/npm}" \
@@ -79,6 +93,7 @@ for argument in "${dsh_args[@]}"; do
   esac
 done
 
+validate_remote_access
 append_trusted_hosts
 
 web_port=${DSH_WEB_PORT:-3080}

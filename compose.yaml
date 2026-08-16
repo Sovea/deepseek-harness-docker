@@ -15,6 +15,7 @@ services:
     restart: unless-stopped
     environment:
       DSH_TRUSTED_HOSTS: ${DSH_TRUSTED_HOSTS:-}
+      DSH_ALLOW_REMOTE_ACCESS: ${DSH_ALLOW_REMOTE_ACCESS:-0}
       DSH_PERMISSION_MODE: ${DSH_PERMISSION_MODE:-workspace-write}
       DSH_TOOLS_MODE: ${DSH_TOOLS_MODE:-native}
       DSH_TELEMETRY_DISABLED: ${DSH_TELEMETRY_DISABLED:-1}

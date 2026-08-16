@@ -40,6 +40,14 @@ RUN set -eux; \
     apt-get purge -y --auto-remove g++ make python3; \
     rm -rf /var/lib/apt/lists/*
 
+COPY patches/enable-remote-access.mjs /tmp/enable-remote-access.mjs
+
+RUN set -eux; \
+    node /tmp/enable-remote-access.mjs \
+      "$(npm root --global)/@deepseek-ai/dsh" \
+      "${DSH_VERSION}"; \
+    rm /tmp/enable-remote-access.mjs
+
 # Keep identity-only arguments below the expensive dependency layer so a host
 # UID/GID change does not reinstall dsh and its native dependencies.
 ARG DSH_UID=1000
