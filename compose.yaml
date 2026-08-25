@@ -11,7 +11,7 @@ services:
         PNPM_VERSION: ${PNPM_VERSION:-11.7.0}
         DSH_UID: ${DSH_UID:-1000}
         DSH_GID: ${DSH_GID:-1000}
-        IMAGE_VERSION: ${IMAGE_VERSION:-0.1.1-rc.2-r1}
+        IMAGE_VERSION: ${IMAGE_VERSION:-0.1.1-rc.2-r2}
     restart: unless-stopped
     environment:
       DSH_TRUSTED_HOSTS: ${DSH_TRUSTED_HOSTS:-}

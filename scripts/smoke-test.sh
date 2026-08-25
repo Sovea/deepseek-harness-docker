@@ -144,6 +144,8 @@ runtime_gid=$(docker run --rm --entrypoint id "$image" -g)
 [[ "$runtime_gid" == "$smoke_gid" ]]
 docker run --rm --entrypoint node "$image" -e \
   "const p=require('/usr/local/lib/node_modules/@deepseek-ai/dsh/node_modules/node-pty'); if (!p.spawn) process.exit(1)"
+docker run --rm --entrypoint sh "$image" -c \
+  "grep -Fq 'globalThis.__DSH_REMOTE_ACCESS__ === true' /usr/local/lib/node_modules/@deepseek-ai/dsh/node_modules/@deepseek-ai/dsh-client-connection/lib/client.js"
 
 log 'checking invalid trusted-host configuration'
 if docker run --rm \
@@ -188,6 +190,15 @@ docker run --detach \
   "$image" >/dev/null
 
 wait_for_web
+
+default_remote_html=$(curl --fail --silent --max-time 2 \
+  --header 'Host: smoke.example' \
+  --header 'Origin: http://smoke.example' \
+  "http://${endpoint}/")
+if grep -Fq 'globalThis.__DSH_REMOTE_ACCESS__=true' <<<"$default_remote_html"; then
+  log 'remote browser capability was exposed while remote access was disabled'
+  exit 1
+fi
 
 if docker logs "$container" 2>&1 | grep -q 'opening the default browser'; then
   log 'container unexpectedly attempted to open a browser'
@@ -256,6 +267,12 @@ docker run --detach \
   "$image" >/dev/null
 
 wait_for_web
+
+enabled_remote_html=$(curl --fail --silent --max-time 2 \
+  --header 'Host: smoke.example' \
+  --header 'Origin: http://smoke.example' \
+  "http://${endpoint}/")
+grep -Fq 'globalThis.__DSH_REMOTE_ACCESS__=true' <<<"$enabled_remote_html"
 
 remote_privileged_status=$(call_api \
   settings.describe \

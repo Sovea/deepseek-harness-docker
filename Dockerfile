@@ -84,7 +84,7 @@ EXPOSE 13080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
   CMD ["dsh-healthcheck"]
 
-ARG IMAGE_VERSION=0.1.1-rc.2-r1
+ARG IMAGE_VERSION=0.1.1-rc.2-r2
 
 LABEL org.opencontainers.image.title="dsh-docker" \
       org.opencontainers.image.description="Minimal, secure-by-default Docker deployment for DeepSeek Harness" \
