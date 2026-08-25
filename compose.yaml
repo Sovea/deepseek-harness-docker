@@ -7,11 +7,11 @@ services:
       context: .
       args:
         NODE_IMAGE: ${NODE_IMAGE:-node:24-bookworm-slim}
-        DSH_VERSION: ${DSH_VERSION:-0.1.0-rc.6}
+        DSH_VERSION: ${DSH_VERSION:-0.1.1-rc.2}
         PNPM_VERSION: ${PNPM_VERSION:-11.7.0}
         DSH_UID: ${DSH_UID:-1000}
         DSH_GID: ${DSH_GID:-1000}
-        IMAGE_VERSION: ${IMAGE_VERSION:-0.1.0-rc.6-r1}
+        IMAGE_VERSION: ${IMAGE_VERSION:-0.1.1-rc.2-r1}
     restart: unless-stopped
     environment:
       DSH_TRUSTED_HOSTS: ${DSH_TRUSTED_HOSTS:-}

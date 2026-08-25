@@ -3,7 +3,7 @@
 ARG NODE_IMAGE=node:24-bookworm-slim
 FROM ${NODE_IMAGE}
 
-ARG DSH_VERSION=0.1.0-rc.6
+ARG DSH_VERSION=0.1.1-rc.2
 ARG PNPM_VERSION=11.7.0
 
 ENV DSH_HOME=/home/node/.dsh \
@@ -84,7 +84,7 @@ EXPOSE 13080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
   CMD ["dsh-healthcheck"]
 
-ARG IMAGE_VERSION=0.1.0-rc.6-r1
+ARG IMAGE_VERSION=0.1.1-rc.2-r1
 
 LABEL org.opencontainers.image.title="dsh-docker" \
       org.opencontainers.image.description="Minimal, secure-by-default Docker deployment for DeepSeek Harness" \

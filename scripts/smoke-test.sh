@@ -3,7 +3,7 @@
 set -Eeuo pipefail
 
 image=${1:-dsh-docker:smoke}
-expected_version=${DSH_EXPECTED_VERSION:-0.1.0-rc.6}
+expected_version=${DSH_EXPECTED_VERSION:-0.1.1-rc.2}
 container="dsh-docker-smoke-${RANDOM}-$$"
 volume="${container}-home"
 workspace_dir=$(mktemp -d)
@@ -100,6 +100,43 @@ log 'checking pinned dsh and non-root execution'
 version_output=$(docker run --rm "$image" --version)
 printf '%s\n' "$version_output"
 [[ "$version_output" == *"$expected_version"* ]]
+docker run --rm --interactive --entrypoint node "$image" - "$expected_version" <<'NODE'
+const { existsSync, readFileSync, readdirSync } = require('node:fs')
+const { join } = require('node:path')
+
+const expectedVersion = process.argv[2]
+const dshRoot = '/usr/local/lib/node_modules/@deepseek-ai/dsh'
+const packages = []
+
+function visit(directory) {
+  const manifestPath = join(directory, 'package.json')
+  if (existsSync(manifestPath)) {
+    const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'))
+    if (
+      manifest.name === '@deepseek-ai/dsh'
+      || manifest.name?.startsWith('@deepseek-ai/dsh-')
+    ) {
+      packages.push({ name: manifest.name, version: manifest.version, manifestPath })
+    }
+  }
+
+  for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    if (entry.isDirectory() && entry.name !== '.bin') visit(join(directory, entry.name))
+  }
+}
+
+visit(dshRoot)
+if (packages.length === 0) throw new Error(`no DSH packages found under ${dshRoot}`)
+
+const mismatches = packages.filter(entry => entry.version !== expectedVersion)
+if (mismatches.length > 0) {
+  for (const entry of mismatches) {
+    console.error(`${entry.name}: expected ${expectedVersion}, found ${entry.version} (${entry.manifestPath})`)
+  }
+  process.exit(1)
+}
+console.log(`verified ${packages.length} DSH packages at ${expectedVersion}`)
+NODE
 runtime_uid=$(docker run --rm --entrypoint id "$image" -u)
 runtime_gid=$(docker run --rm --entrypoint id "$image" -g)
 [[ "$runtime_uid" != 0 ]]
@@ -151,6 +188,11 @@ docker run --detach \
   "$image" >/dev/null
 
 wait_for_web
+
+if docker logs "$container" 2>&1 | grep -q 'opening the default browser'; then
+  log 'container unexpectedly attempted to open a browser'
+  exit 1
+fi
 
 docker exec "$container" test -w /home/node/.dsh
 docker exec "$container" sh -c '

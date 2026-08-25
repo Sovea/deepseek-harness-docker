@@ -5,6 +5,8 @@ A minimal Docker deployment for
 
 This is an unofficial community project. DeepSeek Harness is currently a
 developer preview, so upstream changes may require image updates.
+The project follows the upstream
+[DeepSeek Harness brand usage guidelines](https://github.com/deepseek-ai/deepseek-harness/blob/master/BRAND_GUIDELINES.md).
 
 ## Features
 

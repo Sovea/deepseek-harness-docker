@@ -56,11 +56,9 @@ const privilegedMethods = `const PRIVILEGED_METHODS = new Set([
 assertExactlyOnce(privilegedMethods, 'privileged method registry')
 
 replaceExactlyOnce(
+  `\tconst trustedHosts = config?.trustedHosts ?? [];`,
   `\tconst trustedHosts = config?.trustedHosts ?? [];
-\tconst maxRequestBodyBytes = config?.maxRequestBodyBytes ?? 167772160;`,
-  `\tconst trustedHosts = config?.trustedHosts ?? [];
-\tconst privilegedHosts = process.env.DSH_ALLOW_REMOTE_ACCESS === "1" ? trustedHosts : [];
-\tconst maxRequestBodyBytes = config?.maxRequestBodyBytes ?? 167772160;`,
+\tconst privilegedHosts = process.env.DSH_ALLOW_REMOTE_ACCESS === "1" ? trustedHosts : [];`,
   'remote access trust list',
 )
 

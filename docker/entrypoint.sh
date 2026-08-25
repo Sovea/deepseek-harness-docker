@@ -100,6 +100,7 @@ web_port=${DSH_WEB_PORT:-3080}
 bridge_port=${DSH_BRIDGE_PORT:-13080}
 
 has_port=false
+has_no_open=false
 for (( index = 0; index < ${#dsh_args[@]}; index++ )); do
   argument=${dsh_args[index]}
   if [[ "$argument" == --port ]]; then
@@ -109,10 +110,15 @@ for (( index = 0; index < ${#dsh_args[@]}; index++ )); do
   elif [[ "$argument" == --port=* ]]; then
     web_port=${argument#--port=}
     has_port=true
+  elif [[ "$argument" == --no-open ]]; then
+    has_no_open=true
   fi
 done
 if ! $has_port; then
   dsh_args+=(--port "$web_port")
+fi
+if ! $has_no_open; then
+  dsh_args+=(--no-open)
 fi
 
 validate_port DSH_WEB_PORT "$web_port"
