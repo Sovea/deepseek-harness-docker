@@ -122,6 +122,7 @@ log "building $image"
 docker build \
   --build-arg DSH_UID="$smoke_uid" \
   --build-arg DSH_GID="$smoke_gid" \
+  --build-arg DSH_WITH_PYTHON=1 \
   --tag "$image" .
 
 log 'checking pinned dsh and non-root execution'
@@ -172,6 +173,10 @@ runtime_gid=$(docker run --rm --entrypoint id "$image" -g)
 [[ "$runtime_gid" == "$smoke_gid" ]]
 docker run --rm --entrypoint node "$image" -e \
   "const p=require(require.resolve('node-pty',{paths:['/usr/local/lib/node_modules/@deepseek-ai/dsh']})); if (!p.spawn) process.exit(1)"
+
+log 'checking the Python toolchain is available in the workspace environment'
+docker run --rm --entrypoint python3 "$image" --version
+docker run --rm --entrypoint python "$image" --version
 
 log 'checking invalid trusted-host configuration'
 if docker run --rm \

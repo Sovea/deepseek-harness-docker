@@ -16,6 +16,9 @@ The project follows the upstream
 - Matches the host UID/GID on Linux to preserve workspace file ownership.
 - Supports additional trusted browser authorities through
   `DSH_TRUSTED_HOSTS`.
+- Ships a full Python toolchain (`python3`, `pip`, `venv`, plus `python`/`pip`
+  aliases) in the image, so agents can run Python inside the bind-mounted
+  workspaces. Control it with `DSH_WITH_PYTHON`.
 - Publishes the service on host loopback by default and includes health checks
   and automatic restart handling.
 
@@ -74,6 +77,7 @@ The main settings in `.env` are:
 | `DSH_WORKSPACES` | Host directory mounted as the workspace root | `./workspaces` |
 | `DSH_TRUSTED_HOSTS` | Extra browser authorities accepted by dsh | empty |
 | `DSH_UID`, `DSH_GID` | Container user and group IDs | `1000` |
+| `DSH_WITH_PYTHON` | Keep a full Python toolchain (`python3`, `pip`, `venv`, plus `python`/`pip` aliases) in the image so agents can run Python inside the workspaces (`1` to keep, `0` to strip it out) | `1` |
 | `DEEPSEEK_API_KEY` | Optional provider API key | empty |
 
 `DSH_TRUSTED_HOSTS` accepts comma-separated `host` or `host:port` values. Do

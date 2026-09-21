@@ -11,6 +11,7 @@ services:
         PNPM_VERSION: ${PNPM_VERSION:-11.7.0}
         DSH_UID: ${DSH_UID:-1000}
         DSH_GID: ${DSH_GID:-1000}
+        DSH_WITH_PYTHON: ${DSH_WITH_PYTHON:-1}
         IMAGE_VERSION: ${IMAGE_VERSION:-0.1.6-alpha.1-r1}
     restart: unless-stopped
     environment:

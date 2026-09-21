@@ -6,6 +6,13 @@ FROM ${NODE_IMAGE}
 ARG DSH_VERSION=0.1.6-alpha.1
 ARG PNPM_VERSION=11.7.0
 
+# Keep a full Python toolchain (interpreter, pip, venv, and a `python`/`pip`
+# alias) in the runtime image so agents can run Python inside the
+# /home/node/workspaces tree. Python is always installed during the build
+# because node-gyp needs it to compile the native dsh modules; this flag
+# controls whether it stays in the final image. Set to 0 to strip it back out.
+ARG DSH_WITH_PYTHON=1
+
 ENV DSH_HOME=/home/node/.dsh \
     DSH_WEB_PORT=3080 \
     DSH_BRIDGE_PORT=13080 \
@@ -15,6 +22,11 @@ ENV DSH_HOME=/home/node/.dsh \
     XDG_CONFIG_HOME=/home/node/.dsh/config \
     PATH=/home/node/.dsh/pnpm:${PATH}
 
+# Python is needed below only so node-gyp can compile the native dsh modules.
+# After the npm install we always remove the build-only compiler (g++, make)
+# and, when DSH_WITH_PYTHON=0, strip Python back out of the image too. With
+# the default DSH_WITH_PYTHON=1 the full toolchain (python3, pip, venv, plus
+# the `python`/`pip` aliases) stays available for the agent workspaces.
 RUN set -eux; \
     export DEBIAN_FRONTEND=noninteractive; \
     apt-get update; \
@@ -29,6 +41,8 @@ RUN set -eux; \
       openssh-client \
       procps \
       python3 \
+      python3-pip \
+      python3-venv \
       ripgrep \
       socat \
       tini; \
@@ -37,7 +51,13 @@ RUN set -eux; \
       "pnpm@${PNPM_VERSION}" \
       "@deepseek-ai/dsh@${DSH_VERSION}"; \
     npm cache clean --force; \
-    apt-get purge -y --auto-remove g++ make python3; \
+    apt-get purge -y --auto-remove g++ make; \
+    if [ "${DSH_WITH_PYTHON}" != "1" ]; then \
+      apt-get purge -y --auto-remove python3 python3-pip python3-venv; \
+    else \
+      [ -e /usr/bin/python ] || ln -s /usr/bin/python3 /usr/bin/python; \
+      [ -e /usr/bin/pip ] || ln -s /usr/bin/pip3 /usr/bin/pip; \
+    fi; \
     rm -rf /var/lib/apt/lists/*
 
 # Keep identity-only arguments below the expensive dependency layer so a host
