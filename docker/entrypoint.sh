@@ -87,7 +87,7 @@ fi
 # bind a server. Do not add app arguments or start a bridge around them.
 for argument in "${dsh_args[@]}"; do
   case "$argument" in
-    --dump-config | --dump-default-config | -h | --help)
+    --dump-config | --dump-config-schema | --dump-default-config | -h | --help)
       exec dsh "${dsh_args[@]}"
       ;;
   esac

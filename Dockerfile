@@ -3,7 +3,7 @@
 ARG NODE_IMAGE=node:24-bookworm-slim
 FROM ${NODE_IMAGE}
 
-ARG DSH_VERSION=0.1.6-alpha.2
+ARG DSH_VERSION=0.1.7-rc.2
 ARG PNPM_VERSION=11.7.0
 
 # Keep a full Python toolchain (interpreter, pip, venv, and a `python`/`pip`
@@ -47,7 +47,7 @@ RUN set -eux; \
       socat \
       tini; \
     npm install --global --no-audit --no-fund \
-      --allow-scripts=@deepseek-ai/dsh-subprocess-local,koffi,node-pty,@google/genai,protobufjs,esbuild \
+      --allow-scripts=@deepseek-ai/dsh-subprocess-local,koffi,node-pty,@google/genai,protobufjs \
       "pnpm@${PNPM_VERSION}" \
       "@deepseek-ai/dsh@${DSH_VERSION}"; \
     npm cache clean --force; \
@@ -96,7 +96,7 @@ EXPOSE 13080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
   CMD ["dsh-healthcheck"]
 
-ARG IMAGE_VERSION=0.1.6-alpha.2-r1
+ARG IMAGE_VERSION=0.1.7-rc.2-r1
 
 LABEL org.opencontainers.image.title="dsh-docker" \
       org.opencontainers.image.description="Minimal, secure-by-default Docker deployment for DeepSeek Harness" \
