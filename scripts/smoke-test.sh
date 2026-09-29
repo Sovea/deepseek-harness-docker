@@ -3,7 +3,7 @@
 set -Eeuo pipefail
 
 image=${1:-dsh-docker:smoke}
-expected_version=${DSH_EXPECTED_VERSION:-0.1.7-rc.2}
+expected_version=${DSH_EXPECTED_VERSION:-0.2.0-rc.1}
 container="dsh-docker-smoke-${RANDOM}-$$"
 volume="${container}-home"
 workspace_dir=$(mktemp -d)
